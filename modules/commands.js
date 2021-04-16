@@ -4,26 +4,25 @@ const path = require('path');
 const config = require('../data/config.json');
 const log = global.log;
 
+const CMD_DIR = 'commands';
 const commands = {};
 
 function importDir(dirpath) {
 	try {
-		fs.readdir(dirpath, (err, files) => {
-			if (err) throw err;
-			log(`Importing commands from ${dirpath}`);
-			for (const file of files) {
-				const fpath = path.join(dirpath, file);
-				if (path.extname(fpath) !== '.js')
-					importDir();
-				let command = require(fpath);
-				commands[command.name] = command;
-			}
-		});
+		const files = fs.readdirSync(dirpath);
+		log(`Importing commands from ${path.relative('.', dirpath)}/`);
+		for (const file of files) {
+			const fpath = path.join(dirpath, file);
+			if (path.extname(fpath) !== '.js')
+				importDir();
+			let command = require(fpath);
+			commands[command.name] = command;
+		}
 	} catch (e) {
-		return log('ERROR', `Failed to import cmds from ${path}:\n${e.stack}`);
+		return log(`Failed to import cmds from ${path}:\n${e.stack}`);
 	}
 }
-importDir(path.resolve('../commands'));
+importDir(path.resolve(CMD_DIR));
 
 function checkPermissions(flag) {
 	switch (flag) {
@@ -33,6 +32,8 @@ function checkPermissions(flag) {
 	case 'OFFICER':
 
 		break;
+	case 'NONE':
+		return true;
 	default:
 		return false;
 	}
@@ -46,7 +47,6 @@ async function execute(message) {
 
 	const name = message.content.slice(config.prefix.length).split(/\n|\r| +/g)[0].toLowerCase();
 	const command = commands[name];
-
 	if (!command)
 		return false;
 	if (!checkPermissions(command.permissions))
@@ -59,3 +59,7 @@ async function execute(message) {
 	}
 	return true;
 }
+
+module.exports = {
+	execute
+};

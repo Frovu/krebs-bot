@@ -12,11 +12,15 @@ const reactionRole = require('./modules/reactionRoles');
 
 client.login(config.token);
 
-client.on('ready', function () {
+client.on('ready', () => {
 	try {
 		log('The bot is online!');
 
 	} catch (e) {
 		return log('ERROR', `Failed on.ready: ${e.stack}`);
 	}
+});
+
+client.on('message', message => {
+	commands.execute(message);
 });
