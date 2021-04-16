@@ -15,7 +15,7 @@ client.login(config.token);
 client.on('ready', () => {
 	try {
 		log('The bot is online!');
-
+		reactionRole.onReady();
 	} catch (e) {
 		return log('ERROR', `Failed on.ready: ${e.stack}`);
 	}

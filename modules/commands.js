@@ -13,25 +13,25 @@ function importDir(dirpath) {
 		log(`Importing commands from ${path.relative('.', dirpath)}/`);
 		for (const file of files) {
 			const fpath = path.join(dirpath, file);
-			if (path.extname(fpath) !== '.js')
-				importDir();
-			let command = require(fpath);
-			commands[command.name] = command;
+			if (path.extname(fpath) !== '.js') {
+				importDir(fpath);
+			} else {
+				let command = require(fpath);
+				commands[command.name] = command;
+			}
 		}
 	} catch (e) {
-		return log(`Failed to import cmds from ${path}:\n${e.stack}`);
+		return log(`Failed to import cmds from ${dirpath}:\n${e.stack}`);
 	}
 }
 importDir(path.resolve(CMD_DIR));
 
-function checkPermissions(flag) {
+function checkPermissions(flag, message) {
 	switch (flag) {
-	case 'DEV':
-
-		break;
+	case 'ADMIN':
+		return message.member.hasPermission('ADMINISTRATOR');
 	case 'OFFICER':
-
-		break;
+		return message.member.roles.cache.has(config.officer);
 	case 'NONE':
 		return true;
 	default:
@@ -40,7 +40,7 @@ function checkPermissions(flag) {
 }
 
 async function execute(message) {
-	if (message.author.bot)
+	if (message.author.bot || !message.guild)
 		return false;
 	if (message.content.indexOf(config.prefix) !== 0)
 		return false;
@@ -49,7 +49,7 @@ async function execute(message) {
 	const command = commands[name];
 	if (!command)
 		return false;
-	if (!checkPermissions(command.permissions))
+	if (!checkPermissions(command.permissions, message))
 		return false;
 
 	try {
